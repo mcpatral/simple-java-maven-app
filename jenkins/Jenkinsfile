@@ -47,13 +47,14 @@ pipeline {
                     // Set GNUPGHOME and GPG_TTY environment variables
                     def gnupgHome = '/tmp/gnupg_home'
                     sh "mkdir -p ${gnupgHome}"
+                    sh "chmod 700 ${gnupgHome}" // Set appropriate permissions
                     env.GNUPGHOME = gnupgHome
                     env.GPG_TTY = '/dev/tty'
 
                     // Download HashiCorp GPG key and import it
                     sh '''
                         wget -q -O hashicorp-archive-keyring.gpg https://apt.releases.hashicorp.com/gpg
-                        gpg --dearmor -o hashicorp-archive-keyring.gpg < hashicorp-archive-keyring.gpg
+                        gpg --batch --dearmor -o hashicorp-archive-keyring.gpg < hashicorp-archive-keyring.gpg
                         sudo mv hashicorp-archive-keyring.gpg /usr/share/keyrings/
                     '''
                     
@@ -66,7 +67,6 @@ pipeline {
                 }
             }
         }
-
         stage('terraform_version') {
             steps {
                 sh 'terraform -version'
