@@ -44,11 +44,12 @@ pipeline {
         stage('Install_terraform') {
             steps {
                 script {
-                    // Set GNUPGHOME environment variable
+                    // Set GNUPGHOME and GPG_TTY environment variables
                     def gnupgHome = '/tmp/gnupg_home'
                     sh "mkdir -p ${gnupgHome}"
                     env.GNUPGHOME = gnupgHome
-                    
+                    env.GPG_TTY = '/dev/tty'
+
                     // Download HashiCorp GPG key and import it
                     sh '''
                         wget -q -O hashicorp-archive-keyring.gpg https://apt.releases.hashicorp.com/gpg
