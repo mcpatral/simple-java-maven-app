@@ -43,14 +43,26 @@ pipeline {
         }
         stage('Install_terraform') {
             steps {
-                sh '''
-                    wget -O hashicorp-archive-keyring.gpg https://apt.releases.hashicorp.com/gpg
-                    gpg --dearmor -o hashicorp-archive-keyring.gpg
-                    echo "deb [signed-by=hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-                    sudo mv hashicorp-archive-keyring.gpg /usr/share/keyrings/
-                    sudo apt update
-                    sudo apt install -y terraform
-                '''
+                script {
+                    // Set GNUPGHOME environment variable
+                    def gnupgHome = '/tmp/gnupg_home'
+                    sh "mkdir -p ${gnupgHome}"
+                    env.GNUPGHOME = gnupgHome
+                    
+                    // Download HashiCorp GPG key and import it
+                    sh '''
+                        wget -q -O hashicorp-archive-keyring.gpg https://apt.releases.hashicorp.com/gpg
+                        gpg --dearmor -o hashicorp-archive-keyring.gpg < hashicorp-archive-keyring.gpg
+                        sudo mv hashicorp-archive-keyring.gpg /usr/share/keyrings/
+                    '''
+                    
+                    // Add HashiCorp apt repository
+                    sh '''
+                        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+                        sudo apt update
+                        sudo apt install -y terraform
+                    '''
+                }
             }
         }
 
